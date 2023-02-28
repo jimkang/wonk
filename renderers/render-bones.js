@@ -6,7 +6,7 @@ import { zoom as Zoom } from 'd3-zoom';
 var boneRoot = select('#bone-root');
 var wallRoot = select('#wall-root');
 var diagnosticsRoot = select('#diagnostics-root');
-var board = select('#bone-canvas');
+var board = select('#canvas');
 var zoomLayer = board.select('#zoom-layer');
 var zoom = Zoom().scaleExtent([0.125, 8]).on('zoom', zoomed);
 board.call(zoom);

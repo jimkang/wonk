@@ -8,8 +8,11 @@ import { createProbable as Probable } from 'probable';
 import { renderBones } from './renderers/render-bones';
 import { UpdatePositions } from './updaters/update-positions';
 import skeletonInfo from './data/skeleton.json';
-import { getPathsFromSVG } from './util/get-paths-from-svg';
+import { getPathsFromSVG } from './util/svg-utils';
 import cloneDeep from 'lodash.clonedeep';
+import { CreateFromDef } from './souls';
+import { tealTileDef } from './defs/teal-tile-def';
+import { Soul } from './types';
 
 var randomId = RandomId();
 var routeState;
@@ -39,8 +42,9 @@ async function followRoute({
 
   var random = seedrandom(seed);
   prob = Probable({ random });
+  var createFromDef = CreateFromDef({ seed });
 
-  var board = document.getElementById('bone-canvas');
+  var board = document.getElementById('canvas');
   const boardWidth = +board.getAttribute('width');
   const boardHeight = +board.getAttribute('height');
 
@@ -60,6 +64,13 @@ async function followRoute({
     if (!flatSkeleton[0]) {
       throw new Error('No skeleton.');
     }
+  }
+
+  try {
+    var tealTile: Soul = await createFromDef(tealTileDef);
+    console.log(tealTile);
+  } catch (error) {
+    handleError(error);
   }
 
   var { updatePositions, addBones } = UpdatePositions({

@@ -1,3 +1,4 @@
+import { Body } from 'matter-js';
 import { SynthNode } from './synths/synth-node';
 
 export interface ScoreState {
@@ -38,3 +39,38 @@ export interface PlayEvent {
   started: boolean;
   rest?: boolean;
 }
+
+export type Pair = number[];
+export interface Pt {
+  x: number;
+  y: number;
+}
+
+export interface SoulBase {
+  kind: string;
+  tags: string[];
+  // actionSet
+  collisionMask: number;
+  collisionCategory: number;
+  collisionGroup: number;
+}
+
+export interface SoulDef extends SoulBase {
+  svgSrcForDirections: Record<string, string>;
+  vertices: Pt[];
+}
+
+export interface Soul extends SoulBase {
+  id: string;
+  svgsForDirections: Record<string, SVGElement>;
+  body: Body;
+  destination: Pt;
+  holdings: Soul[];
+}
+
+export interface SoulDefSpot {
+  pos: Pt;
+  def: SoulDef;
+}
+
+export type SoulDefMap = SoulDef[];
