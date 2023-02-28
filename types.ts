@@ -45,6 +45,11 @@ export interface Pt {
   x: number;
   y: number;
 }
+export interface BoxSize {
+  width: number;
+  height: number;
+}
+export type Box = Pt & BoxSize;
 
 export interface SoulBase {
   kind: string;
@@ -53,16 +58,17 @@ export interface SoulBase {
   collisionMask: number;
   collisionCategory: number;
   collisionGroup: number;
+  vertices: Pt[];
+  verticesBox: Box;
 }
 
 export interface SoulDef extends SoulBase {
   svgSrcForDirections: Record<string, string>;
-  vertices: Pt[];
 }
 
 export interface Soul extends SoulBase {
   id: string;
-  svgsForDirections: Record<string, SVGElement>;
+  svgsForDirections: Record<string, SVGPathElement[]>;
   body: Body;
   destination: Pt;
   holdings: Soul[];

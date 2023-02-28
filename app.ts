@@ -7,9 +7,6 @@ import RandomId from '@jimkang/randomid';
 import { createProbable as Probable } from 'probable';
 import { renderBones } from './renderers/render-bones';
 import { UpdatePositions } from './updaters/update-positions';
-import skeletonInfo from './data/skeleton.json';
-import { getPathsFromSVG } from './util/svg-utils';
-import cloneDeep from 'lodash.clonedeep';
 import { CreateFromDef } from './souls';
 import { tealTileDef } from './defs/teal-tile-def';
 import { Soul } from './types';
@@ -32,7 +29,6 @@ var prob;
 
 async function followRoute({
   seed,
-  skullOnly = false,
   showBodyBounds = false,
 }) {
   if (!seed) {
@@ -48,35 +44,21 @@ async function followRoute({
   const boardWidth = +board.getAttribute('width');
   const boardHeight = +board.getAttribute('height');
 
-  var flatSkeleton = skeletonInfo.bones
-    .filter((src) => src.vertices)
-    .map((src) => Object.assign({}, { rotationAngle: prob.roll(360) }, src));
-
-  console.log(flatSkeleton);
-
-  var svgPathsForBones = await getSVGPathsForBones({
-    flatSkeleton,
-    skeletonInfo,
-  });
-
-  if (skullOnly) {
-    flatSkeleton = [flatSkeleton.find((bone) => bone.id === 'head-bone')];
-    if (!flatSkeleton[0]) {
-      throw new Error('No skeleton.');
-    }
-  }
+  var souls: Soul[] = [];
 
   try {
     var tealTile: Soul = await createFromDef(tealTileDef);
     console.log(tealTile);
+    souls.push(tealTile);
+
   } catch (error) {
     handleError(error);
   }
 
-  var { updatePositions, addBones } = UpdatePositions({
+  var { updatePositions } = UpdatePositions({
     boardWidth,
     boardHeight,
-    flatSkeleton,
+    souls,
     prob,
   });
 
@@ -90,9 +72,7 @@ async function followRoute({
   function loop() {
     var bodies = updatePositions();
     renderBones({
-      bodies,
-      svgPathsForBones,
-      skeletonInfo,
+      souls,
       showBodyBounds,
     });
     requestAnimationFrame(loop);
@@ -100,34 +80,7 @@ async function followRoute({
 
   // Do we actually need to keep track of all of the bones we added?
   function onBone() {
-    addBones({ bones: [cloneDeep(prob.pick(flatSkeleton))] });
-  }
-}
-
-async function getSVGPathsForBones({ flatSkeleton, skeletonInfo }) {
-  var dict = {};
-  var uniqueBoneIds = flatSkeleton
-    .map((node) => node.id)
-    .reduce((ids, id) => (ids.includes(id) ? ids : ids.concat([id])), []);
-
-  await Promise.all(uniqueBoneIds.map(addSVGRootForBone));
-  return dict;
-
-  async function addSVGRootForBone(id) {
-    const imageURL = `${skeletonInfo.baseLocation}${id}.svg`;
-    try {
-      let res = await fetch(imageURL);
-      let text = await res.text();
-      let parser = new window.DOMParser();
-      let root = parser.parseFromString(text, 'image/svg+xml');
-      dict[id] = getPathsFromSVG({
-        svgNode: root,
-        discardTransforms: false,
-        normalize: false, // This is important.
-      });
-    } catch (error) {
-      console.error(`Could not get SVG root for ${id}.`, error);
-    }
+    // addBones({ bones: [cloneDeep(prob.pick(flatSkeleton))] });
   }
 }
 

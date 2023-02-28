@@ -6,7 +6,7 @@ export function getPathsFromSVG({ svgNode, discardTransforms }): SVGPathElement[
   return paths;
 }
 
-export async function getSVGPathsFromFile({ baseLocation, filename }): SVGPathElement[] {
+export async function getSVGPathsFromFile({ baseLocation, filename }): Promise<SVGPathElement[]> {
   const imageURL = `${baseLocation}/${filename}`;
   try {
     let res = await fetch(imageURL);
@@ -18,6 +18,6 @@ export async function getSVGPathsFromFile({ baseLocation, filename }): SVGPathEl
       discardTransforms: false,
     });
   } catch (error) {
-    console.error(`Could not get SVG root for ${id}.`, error);
+    console.error(`Could not get SVG root for ${filename}.`, error);
   }
 }

@@ -3,7 +3,7 @@ import accessor from 'accessor';
 import { select } from 'd3-selection';
 import { zoom as Zoom } from 'd3-zoom';
 
-var boneRoot = select('#bone-root');
+var depictionRoot = select('#bone-root');
 var wallRoot = select('#wall-root');
 var diagnosticsRoot = select('#diagnostics-root');
 var board = select('#canvas');
@@ -16,64 +16,59 @@ function zoomed(zoomEvent) {
 }
 
 export function renderBones({
-  bodies,
-  svgPathsForBones,
-  skeletonInfo,
+  souls,
   showBodyBounds,
 }) {
   //console.log(bodies.map((body) => body.vertices));
   if (showBodyBounds) {
-    renderBounds({ bodies });
+    renderBounds({ bodies: souls.map(soul => soul.body) });
   }
-  renderWalls({ bodies: bodies.filter((body) => body.label === 'wall') });
+  // TODO: Move this out.
+  //renderWalls({ bodies: bodies.filter((body) => body.label === 'wall') });
 
-  var bones = boneRoot
-    .selectAll('.bone')
-    .data(bodies.filter((body) => body.label in svgPathsForBones, accessor()));
-  bones.exit().remove();
-  var newBones = bones
+  var depictions = depictionRoot
+    .selectAll('.depiction')
+    .data(souls, accessor());
+  depictions.exit().remove();
+  var newDepictions = depictions
     .enter()
     .append('g')
-    .attr('class', (body) => 'bone ' + body.label);
-  newBones.each(appendPaths);
+    .attr('class', (soul) => `depiction ${soul.id}`);
+  newDepictions.each(appendPaths);
 
-  newBones
-    .merge(bones)
+  newDepictions
+    .merge(depictions)
     //.attr('transform-origin', getTransformOrigin)
     .attr('transform', getTransform);
 
-  function getTransform(body) {
-    const angleDegrees = (body.angle / (2 * Math.PI)) * 360;
+  function getTransform(soul) {
+    const angleDegrees = (soul.body.angle / (2 * Math.PI)) * 360;
     //if (body.label === 'back-bone') {
     //console.log('bbox', bbox);
     //}
-    var boneInfo = skeletonInfo.bones.find((bone) => bone.id === body.label);
-    if (!boneInfo) {
-      throw new Error(`No boneInfo for ${body.label}.`);
-    }
 
     // body.position is the center of the body.
     // Additionally, you can't assume that the vertices and
     // the svg share the same center.
     // Everything that goes into the translate command has to be pre-rotation.
     // Find the where the corner of the body would be if it weren't rotated.
-    const bodyCornerX = body.position.x - boneInfo.verticesWidth / 2;
-    const bodyCornerY = body.position.y - boneInfo.verticesHeight / 2;
+    const bodyCornerX = soul.body.position.x - soul.verticesBox.width / 2;
+    const bodyCornerY = soul.body.position.y - soul.verticesBox.height / 2;
     // Find where the representation's corner should be by using verticesOffset
     // and the body's corner.
-    const translateString = `translate(${
-      bodyCornerX - boneInfo.verticesOffset.x
-    }, ${bodyCornerY - boneInfo.verticesOffset.y})`;
-    const rotationString = `rotate(${angleDegrees}, ${body.position.x}, ${body.position.y})`;
+    const translateString = `translate(${bodyCornerX - soul.verticesBox.x
+      }, ${bodyCornerY - soul.verticesBox.y})`;
+    const rotationString = `rotate(${angleDegrees}, ${soul.body.position.x}, ${soul.body.position.y})`;
     // The last command in the transform string goes first. Translate to the
     // destination, then rotate.
     return `${rotationString} ${translateString}`;
   }
 
-  function appendPaths({ label }) {
+  function appendPaths(soul) {
     // cloneNode is necessary because appending it here will remove it from its
     // source tree.
-    svgPathsForBones[label].forEach((path) =>
+    // TODO: Instead using default, check which direction the soul is facing and use the appropriate paths for that direction.
+    soul.svgsForDirections.default.forEach((path) =>
       this.appendChild(path.cloneNode())
     );
   }

@@ -1,4 +1,5 @@
-import { SoulDef } from '../types'
+import { SoulDef } from '../types';
+
 export let tealTileDef: SoulDef = {
   tags: ['bg'],
   kind: 'tile',
@@ -6,8 +7,9 @@ export let tealTileDef: SoulDef = {
   collisionCategory: 1,
   collisionGroup: 0,
   svgSrcForDirections: {
-    default: 'squirrel-facing-right.svg'
+    default: 'teal-tile.svg'
   },
+  verticesBox: { x: 0, y: 0, width: 64, height: 64 },
   vertices: [
     {
       'x': 0,

@@ -1,5 +1,6 @@
 import { Engine, Body, Composite } from 'matter-js';
 import { createWalls } from './create-walls';
+import { Soul } from '../types';
 
 export function UpdatePositions({
   fps = 60,
@@ -7,10 +8,10 @@ export function UpdatePositions({
   boardHeight,
   groundThickness = 60,
   wallThickness = 60,
-  flatSkeleton,
+  souls,
   prob,
 }) {
-  var engine = new Engine.create({ gravity: { x: 0, y: 2 } });
+  var engine = Engine.create({ gravity: { x: 0, y: 0, scale: 0 } });
   // create two walls and a ground
   createWalls({
     wallThickness,
@@ -22,13 +23,13 @@ export function UpdatePositions({
   });
 
   // Make boxes for the bones.
-  var boneBoxes = flatSkeleton.map(boxForBone);
+  var boneBoxes = souls.map(createBodyForSoul);
   Composite.add(engine.world, boneBoxes);
 
   return { updatePositions, addBones };
 
   function addBones({ bones }) {
-    var boneBoxes = bones.map(boxForBone);
+    var boneBoxes = bones.map(createBodyForSoul);
     Composite.add(engine.world, boneBoxes);
   }
 
@@ -37,12 +38,12 @@ export function UpdatePositions({
     return Composite.allBodies(engine.world);
   }
 
-  function boxForBone(bone) {
+  function createBodyForSoul(soul: Soul) {
     const x = prob.roll(boardWidth);
     const y = prob.roll(boardHeight / 4);
     var bodyOpts = {
-      angle: bone.rotationAngle,
-      label: bone.id,
+      angle: 0,
+      label: soul.id,
       restitution: 1.25,
       slop: 16,
       density: 1.25,
@@ -50,16 +51,17 @@ export function UpdatePositions({
       force: { x: 0, y: 100 },
     };
 
-    if (bone.vertices) {
-      return Body.create(
+    if (soul.vertices) {
+      soul.body = Body.create(
         Object.assign(
           {
-            vertices: bone.vertices.map((pt) => ({ x: pt[0], y: pt[1] })),
+            vertices: soul.vertices,
             position: { x, y },
           },
           bodyOpts
         )
       );
+      return soul.body;
     }
     throw new Error('Missing vertices.');
   }
