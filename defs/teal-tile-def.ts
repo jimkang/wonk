@@ -9,6 +9,7 @@ export let tealTileDef: SoulDef = {
   svgSrcForDirections: {
     default: 'teal-tile.svg'
   },
+  svgScale: 4.0,
   verticesBox: { x: 0, y: 0, width: 64, height: 64 },
   vertices: [
     {

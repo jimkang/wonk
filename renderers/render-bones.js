@@ -4,7 +4,6 @@ import { select } from 'd3-selection';
 import { zoom as Zoom } from 'd3-zoom';
 
 var depictionRoot = select('#bone-root');
-var wallRoot = select('#wall-root');
 var diagnosticsRoot = select('#diagnostics-root');
 var board = select('#canvas');
 var zoomLayer = board.select('#zoom-layer');
@@ -15,13 +14,10 @@ function zoomed(zoomEvent) {
   zoomLayer.attr('transform', zoomEvent.transform);
 }
 
-export function renderBones({
-  souls,
-  showBodyBounds,
-}) {
+export function renderBones({ souls, showBodyBounds }) {
   //console.log(bodies.map((body) => body.vertices));
   if (showBodyBounds) {
-    renderBounds({ bodies: souls.map(soul => soul.body) });
+    renderBounds({ bodies: souls.map((soul) => soul.body) });
   }
   // TODO: Move this out.
   //renderWalls({ bodies: bodies.filter((body) => body.label === 'wall') });
@@ -56,12 +52,14 @@ export function renderBones({
     const bodyCornerY = soul.body.position.y - soul.verticesBox.height / 2;
     // Find where the representation's corner should be by using verticesOffset
     // and the body's corner.
-    const translateString = `translate(${bodyCornerX - soul.verticesBox.x
-      }, ${bodyCornerY - soul.verticesBox.y})`;
+    const translateString = `translate(${bodyCornerX - soul.verticesBox.x}, ${
+      bodyCornerY - soul.verticesBox.y
+    })`;
     const rotationString = `rotate(${angleDegrees}, ${soul.body.position.x}, ${soul.body.position.y})`;
-    // The last command in the transform string goes first. Translate to the
+    const scaleString = isNaN(soul.svgScale) ? '' : `scale(${soul.svgScale})`;
+    // The last command in the transform string goes first. Scale, then translate to the
     // destination, then rotate.
-    return `${rotationString} ${translateString}`;
+    return `${rotationString} ${translateString} ${scaleString}`;
   }
 
   function appendPaths(soul) {
@@ -121,19 +119,4 @@ function verticesToEdges(vertices) {
     });
     return edges;
   }
-}
-
-function renderWalls({ bodies }) {
-  var walls = wallRoot.selectAll('polygon').data(bodies);
-  walls.exit().remove();
-  walls
-    .enter()
-    .append('polygon')
-    .attr('fill', 'hsl(30, 10%, 70%)')
-    .merge(walls)
-    .attr('points', (body) => verticesToPolygonPoints(body.vertices));
-}
-
-function verticesToPolygonPoints(vertices) {
-  return vertices.map((v) => v.x + ',' + v.y).join(' ');
 }

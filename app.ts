@@ -2,18 +2,18 @@ import RouteState from 'route-state';
 import handleError from 'handle-error-web';
 import { version } from './package.json';
 import wireControls from './renderers/wire-controls';
-import seedrandom from 'seedrandom';
+// import seedrandom from 'seedrandom';
 import RandomId from '@jimkang/randomid';
-import { createProbable as Probable } from 'probable';
+// import { createProbable as Probable } from 'probable';
 import { renderBones } from './renderers/render-bones';
 import { UpdatePositions } from './updaters/update-positions';
-import { CreateFromDef } from './souls';
-import { tealTileDef } from './defs/teal-tile-def';
-import { Soul } from './types';
+import { SoulMaker } from './souls';
+import { Soul, SoulSpot } from './types';
+import { exampleBGMap } from './defs/maps/example-bg-map';
 
 var randomId = RandomId();
 var routeState;
-var prob;
+// var prob: any;
 
 (async function go() {
   window.onerror = reportTopLevelError;
@@ -36,31 +36,23 @@ async function followRoute({
     return;
   }
 
-  var random = seedrandom(seed);
-  prob = Probable({ random });
-  var createFromDef = CreateFromDef({ seed });
-
-  var board = document.getElementById('canvas');
-  const boardWidth = +board.getAttribute('width');
-  const boardHeight = +board.getAttribute('height');
+  // var random = seedrandom(seed);
+  // prob = Probable({ random });
+  var { createSoulsInSpots } = SoulMaker({ seed });
+  var { updatePositions, addSouls } = UpdatePositions({});
 
   var souls: Soul[] = [];
 
   try {
-    var tealTile: Soul = await createFromDef(tealTileDef);
-    console.log(tealTile);
-    souls.push(tealTile);
-
+    let initialSoulSpots: SoulSpot[] = await createSoulsInSpots(exampleBGMap);
+    console.log('Initial soul spots', initialSoulSpots);
+    // It's not a good idea to hold onto initialSoulSpots because the souls
+    // will move to other positions. Check soul.body for current posiions. 
+    addSouls({ soulSpots: initialSoulSpots })
+    souls = initialSoulSpots.map(spot => spot.soul);
   } catch (error) {
     handleError(error);
   }
-
-  var { updatePositions } = UpdatePositions({
-    boardWidth,
-    boardHeight,
-    souls,
-    prob,
-  });
 
   wireControls({
     onReset: () => routeState.addToRoute({ seed: randomId(8) }),
@@ -70,7 +62,7 @@ async function followRoute({
   loop();
 
   function loop() {
-    var bodies = updatePositions();
+    updatePositions();
     renderBones({
       souls,
       showBodyBounds,

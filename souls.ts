@@ -1,4 +1,4 @@
-import { Soul, SoulDef } from './types';
+import { Soul, SoulDef, SoulDefSpot, SoulSpot } from './types';
 import cloneDeep from 'lodash.clonedeep';
 import RandomId from '@jimkang/randomid';
 import seedrandom from 'seedrandom';
@@ -6,9 +6,9 @@ import { getSVGPathsFromFile } from './util/svg-utils';
 
 const baseLocation = 'static/svg';
 
-export function CreateFromDef({ seed }) {
+export function SoulMaker({ seed }) {
   var randomId = RandomId({ random: seedrandom(seed) });
-  return createFromDef;
+  return { createFromDef, createSoulsInSpots };
 
   async function createFromDef(def: SoulDef): Promise<Soul> {
     var svgsForDirections = {};
@@ -34,5 +34,17 @@ export function CreateFromDef({ seed }) {
       holdings: []
     };
     return soul;
+  }
+
+  async function createSoulsInSpots(defSpots: SoulDefSpot[]): Promise<SoulSpot[]> {
+    return await Promise.all(defSpots.map(createSoulInSpot));
+  }
+
+  async function createSoulInSpot(defSpot: SoulDefSpot): Promise<SoulSpot> {
+    var soulSpot: SoulSpot = {
+      pos: defSpot.pos,
+      soul: await createFromDef(defSpot.def)
+    };
+    return soulSpot;
   }
 }

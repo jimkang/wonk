@@ -60,6 +60,7 @@ export interface SoulBase {
   collisionGroup: number;
   vertices: Pt[];
   verticesBox: Box;
+  svgScale?: number;
 }
 
 export interface SoulDef extends SoulBase {
@@ -79,4 +80,9 @@ export interface SoulDefSpot {
   def: SoulDef;
 }
 
-export type SoulDefMap = SoulDef[];
+export type SoulDefMap = SoulDefSpot[];
+
+export interface SoulSpot {
+  pos: Pt;
+  soul: Soul;
+}
